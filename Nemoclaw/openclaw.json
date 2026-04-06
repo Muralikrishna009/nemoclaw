@@ -1,0 +1,14 @@
+{
+  "mcp": {
+    "servers": {
+      "nemoclaw": {
+        "command": "/home/ubuntu/nemoclaw/Nemoclaw/mcp-server/venv/bin/python",
+        "args": ["/home/ubuntu/nemoclaw/Nemoclaw/mcp-server/mcp_stdio.py"],
+        "env": {
+          "BASE_URL": "http://localhost:8000",
+          "PYTHONPATH": "/home/ubuntu/nemoclaw/Nemoclaw/mcp-server"
+        }
+      }
+    }
+  }
+}
