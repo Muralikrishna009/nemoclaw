@@ -1,8 +1,7 @@
 """
 NemoClaw MCP Server
-FastAPI application exposing:
-  - REST API endpoints  → used by mcp-client / direct HTTP callers
-  - MCP Protocol (SSE)  → used by OpenClaw / Claude Desktop / any MCP-aware agent
+FastAPI application exposing REST API endpoints for PDF and image generation.
+The stdio MCP interface is handled separately by mcp_stdio.py (used by mcporter/OpenClaw).
 
 Run: uvicorn main:app --reload --port 8000
 """
@@ -13,7 +12,6 @@ import os
 
 from routes.tools import router as tools_router, files_router
 from routes.health import router as health_router
-from mcp_protocol import mcp  # MCP protocol instance
 
 app = FastAPI(
     title="NemoClaw MCP Server",
@@ -32,15 +30,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ── REST routes (used by mcp-client and direct HTTP callers) ──────────────────
+# REST routes
 app.include_router(health_router)
 app.include_router(tools_router)
 app.include_router(files_router)
-
-# ── MCP Protocol (SSE) — used by OpenClaw / Claude Desktop ───────────────────
-# OpenClaw connects to: http://localhost:8000/mcp/sse
-mcp_app = mcp.get_asgi_app()
-app.mount("/mcp", mcp_app)
 
 # Ensure output dirs exist
 for sub in ("pdfs", "images"):
@@ -54,5 +47,4 @@ async def root():
         "docs": "/docs",
         "health": "/health",
         "rest_tools": "/tools",
-        "mcp_protocol": "/mcp/sse",   # <-- OpenClaw connects here
     }
