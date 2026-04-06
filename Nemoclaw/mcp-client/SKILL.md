@@ -1,13 +1,13 @@
 ---
 name: nemoclaw-tools
-description: Generate and send PDF financial reports and diagrams directly to users on Telegram.
+description: Generate PDF financial reports and diagrams using NemoClaw MCP tools. Use when user asks for reports, charts, flowcharts, or diagrams.
 metadata: { "openclaw": { "emoji": "📊" } }
 ---
 
 # NemoClaw MCP Tools
 
-Generate and deliver files directly to the user in one tool call.
-Always pass the user's `chat_id` from the current Telegram conversation.
+Generate financial PDF reports and diagrams. After calling a tool, output the file path using
+the `MEDIA:` directive so OpenClaw attaches it directly to the Telegram reply.
 
 ## When to Activate
 
@@ -17,39 +17,42 @@ Always pass the user's `chat_id` from the current Telegram conversation.
 ## How to Call
 
 ```bash
-# Financial PDF — file is sent directly to the user
-mcporter call nemoclaw-tools.generate_pdf chat_id="<user_chat_id>" report_type=financial period="Q1 2025"
+mcporter call nemoclaw-tools.generate_pdf report_type=financial period="Q1 2025"
+mcporter call nemoclaw-tools.generate_pdf report_type=summary period="Q2 2025"
+mcporter call nemoclaw-tools.generate_pdf report_type=invoice period="Q1 2025"
 
-# Summary report
-mcporter call nemoclaw-tools.generate_pdf chat_id="<user_chat_id>" report_type=summary period="Q2 2025"
+mcporter call nemoclaw-tools.generate_image diagram_type=flowchart flow=order_processing
+mcporter call nemoclaw-tools.generate_image diagram_type=bar_chart period="Q2 2025"
+mcporter call nemoclaw-tools.generate_image diagram_type=org_chart
+```
 
-# Invoice
-mcporter call nemoclaw-tools.generate_pdf chat_id="<user_chat_id>" report_type=invoice period="Q1 2025"
+## IMPORTANT — After every tool call
 
-# Flowchart
-mcporter call nemoclaw-tools.generate_image chat_id="<user_chat_id>" diagram_type=flowchart flow=order_processing
+The tool returns a `file_path`. You MUST output it using the MEDIA directive on its own line
+so OpenClaw attaches the file to the Telegram message:
 
-# Bar chart
-mcporter call nemoclaw-tools.generate_image chat_id="<user_chat_id>" diagram_type=bar_chart period="Q2 2025"
+```
+MEDIA:/tmp/financial_abc123.pdf
+```
 
-# Org chart
-mcporter call nemoclaw-tools.generate_image chat_id="<user_chat_id>" diagram_type=org_chart
+The line must be on its own — no other text on that line. Example full response:
+
+```
+Here is your Q1 2025 Financial Report:
+
+MEDIA:/tmp/financial_abc123.pdf
+
+Let me know if you need any other reports!
 ```
 
 ## Parameters
 
 ### generate_pdf
-- `chat_id`: Telegram chat ID of the user (required)
 - `report_type`: financial | summary | invoice
 - `period`: Q1 2025 | Q2 2025 | Q3 2025 | Q4 2025
 - `department`: Sales | Engineering | Marketing | Operations | HR (optional)
 
 ### generate_image
-- `chat_id`: Telegram chat ID of the user (required)
 - `diagram_type`: flowchart | org_chart | bar_chart
 - `flow`: order_processing | onboarding | support_ticket (for flowchart)
 - `period`: Q1 2025 | Q2 2025 | Q3 2025 | Q4 2025 (for bar_chart)
-
-## After Calling
-
-The file is sent directly as a Telegram document. Reply to the user: "Your [report name] has been sent!"
