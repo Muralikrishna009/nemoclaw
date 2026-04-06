@@ -24,11 +24,12 @@ OpenClaw config (~/.openclaw/openclaw.json):
 
 import sys
 import os
+import base64
 
 # Add mcp-server root to path so services/ and dummy_data/ are importable
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp import FastMCP, Image
 from services.pdf_service import generate_pdf
 from services.image_service import generate_image
 
@@ -39,7 +40,8 @@ mcp = FastMCP(
     instructions=(
         "Tools for generating financial PDF reports and diagrams. "
         "Use generate_pdf for financial, summary, or invoice reports. "
-        "Use generate_image for flowcharts, org charts, and bar charts."
+        "Use generate_image for flowcharts, org charts, and bar charts. "
+        "After generating, send the file directly to the user as a document attachment."
     ),
 )
 
@@ -54,7 +56,7 @@ def generate_pdf_tool(
     department: str = "",
 ) -> dict:
     """
-    Generate a PDF financial report.
+    Generate a PDF financial report and return its content for delivery to the user.
 
     Args:
         report_type: "financial", "summary", or "invoice"
@@ -63,7 +65,8 @@ def generate_pdf_tool(
         department: Filter by department — "Sales", "Engineering", "Marketing", "Operations", "HR" (optional)
 
     Returns:
-        dict with file_url to download the PDF and a message
+        dict with file_data (base64 PDF), filename, mime_type, and a message.
+        Send file_data to the user as a PDF document attachment.
     """
     params = {"period": period or "Q1 2025"}
     if department:
@@ -78,10 +81,16 @@ def generate_pdf_tool(
     filename = os.path.basename(filepath)
     file_url = f"{BASE_URL}/files/pdfs/{filename}"
 
+    with open(filepath, "rb") as f:
+        file_data = base64.b64encode(f.read()).decode("utf-8")
+
     return {
         "success": True,
+        "filename": filename,
+        "mime_type": "application/pdf",
+        "file_data": file_data,
         "file_url": file_url,
-        "message": f"{(report_type or 'financial').title()} report generated for {period}. Download: {file_url}",
+        "message": f"{(report_type or 'financial').title()} report generated for {period}.",
     }
 
 
@@ -95,9 +104,9 @@ def generate_image_tool(
     period: str = "Q1 2025",
     nodes: list[str] = None,
     edges: list[list[str]] = None,
-) -> dict:
+) -> Image:
     """
-    Generate a diagram or chart image.
+    Generate a diagram or chart image and return it for delivery to the user.
 
     Args:
         diagram_type: "flowchart", "org_chart", or "bar_chart"
@@ -108,7 +117,7 @@ def generate_image_tool(
         edges: Custom edges e.g. [["Start","Process"],["Process","End"]] (optional)
 
     Returns:
-        dict with file_url to download the image and a message
+        Image content — send this directly to the user as a photo or image attachment.
     """
     params = {
         "flow": flow or "order_processing",
@@ -123,14 +132,10 @@ def generate_image_tool(
         edges=edges,
     )
 
-    filename = os.path.basename(filepath)
-    file_url = f"{BASE_URL}/files/images/{filename}"
+    with open(filepath, "rb") as f:
+        image_bytes = f.read()
 
-    return {
-        "success": True,
-        "file_url": file_url,
-        "message": f"{(diagram_type or 'flowchart').replace('_', ' ').title()} generated. Download: {file_url}",
-    }
+    return Image(data=image_bytes, format="png")
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────

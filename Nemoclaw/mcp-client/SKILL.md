@@ -7,6 +7,7 @@ metadata: { "openclaw": { "emoji": "📊" } }
 # NemoClaw MCP Tools
 
 Use `mcporter` to generate PDF reports and diagrams when users ask for them.
+The tools return the file content directly — send it to the user as a file attachment.
 
 ## When to Activate
 
@@ -35,6 +36,13 @@ mcporter call nemoclaw-tools.generate_image_tool diagram_type=bar_chart period="
 mcporter call nemoclaw-tools.generate_image_tool diagram_type=org_chart
 ```
 
+## What the Tools Return
+
+- `generate_pdf_tool` → returns `file_data` (base64 PDF), `filename`, `mime_type: application/pdf`
+- `generate_image_tool` → returns image content directly (PNG)
+
+**Send the result as a file/document attachment to the user — not as a URL or text.**
+
 ## Parameters
 
 ### generate_pdf_tool
@@ -46,9 +54,3 @@ mcporter call nemoclaw-tools.generate_image_tool diagram_type=org_chart
 - `diagram_type`: flowchart | org_chart | bar_chart
 - `flow`: order_processing | onboarding | support_ticket (for flowchart)
 - `period`: Q1 2025 | Q2 2025 | Q3 2025 | Q4 2025 (for bar_chart)
-
-## After Calling
-
-The tool returns a `file_url`. Send that URL to the user so they can download the file.
-
-Example: "Here is your report: http://localhost:8000/files/pdfs/financial_abc123.pdf"
