@@ -3,6 +3,9 @@ import "./globals.css";
 import { AuthProvider } from "@/hooks/useAuth";
 import { Toaster } from "react-hot-toast";
 
+// All pages need Firebase auth state — disable static prerendering at build time.
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "NemoClaw Admin",
   description: "Admin panel for NemoClaw platform",

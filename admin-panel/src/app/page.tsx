@@ -15,9 +15,8 @@ export default function Home() {
   }, [user, loading, router]);
 
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh" }}>
-      <div style={{ width: 32, height: 32, border: "3px solid #0f3460", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    <div className="page-center" role="status" aria-label="Loading">
+      <div className="spinner" />
     </div>
   );
 }
