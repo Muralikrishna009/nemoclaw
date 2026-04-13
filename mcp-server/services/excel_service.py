@@ -168,8 +168,8 @@ def _get_file_password() -> str | None:
         )
         with urllib.request.urlopen(req, timeout=3) as resp:
             data = json.loads(resp.read())
-        if data.get("pdf_password_enabled") == "true" and data.get("pdf_password"):
-            return data["pdf_password"]
+        if data.get("excel_password_enabled") == "true" and data.get("excel_password"):
+            return data["excel_password"]
     except Exception:
         pass
     return None

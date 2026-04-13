@@ -9,17 +9,25 @@ metadata: { "openclaw": { "emoji": "📊" } }
 Generate financial PDF/Excel reports and diagrams. After calling a tool, output the file path
 using the `MEDIA:` directive so OpenClaw attaches it directly to the Telegram reply.
 
-## When to Activate
+## Format Detection — PDF vs Excel
 
-### PDF reports → `generate_pdf`
-- User asks for **financial report**, **revenue**, **P&L**, **profit** → `report_type=financial`
+**Use `generate_pdf` when the user clearly says:**
+- "PDF", "report", "generate report", "send report"
+
+**Use `generate_excel` when the user clearly says:**
+- "Excel", "spreadsheet", "xlsx", "sheet", "editable", "I want to edit the data"
+
+**When the format is ambiguous — ask before calling any tool:**
+> If the user says something like "generate financial report", "send me the numbers",
+> "give me the data", or anything without a clear format keyword — DO NOT guess.
+> Ask: _"Would you like that as a PDF or an Excel spreadsheet?"_
+> Then call the correct tool based on their answer.
+
+**report_type selection (applies to both PDF and Excel):**
+- User asks for **financial**, **revenue**, **P&L**, **profit** → `report_type=financial`
 - User asks for **summary**, **executive summary**, **overview** → `report_type=summary`
 - User asks for **invoices**, **billing**, **payment status** → `report_type=invoice`
 - User asks for **support tickets**, **ticket report**, **helpdesk** → `report_type=support`
-
-### Excel reports → `generate_excel`
-- User says **Excel**, **spreadsheet**, **xlsx**, or **sheet** → use `generate_excel`
-- Same `report_type` values apply: financial | summary | invoice | support
 
 ### Images → `generate_image`
 - User asks for a **chart**, **diagram**, **flowchart**, or **org chart** → `generate_image`

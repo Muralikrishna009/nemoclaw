@@ -90,6 +90,16 @@ async function main() {
     update: {},
     create: { key: "pdf_password", value: "" },
   });
+  await prisma.setting.upsert({
+    where: { key: "excel_password_enabled" },
+    update: {},
+    create: { key: "excel_password_enabled", value: "false" },
+  });
+  await prisma.setting.upsert({
+    where: { key: "excel_password" },
+    update: {},
+    create: { key: "excel_password", value: "" },
+  });
 
   console.log("✓ Seed complete");
 }

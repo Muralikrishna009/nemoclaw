@@ -131,8 +131,11 @@ def generate_excel(
     - "support"   → 4 sheets: Overview stats, By Priority, By Category, Recent Tickets
                     Use when: user asks for support ticket Excel, helpdesk spreadsheet
 
-    Use generate_excel when user says "Excel", "spreadsheet", "xlsx", or "sheet".
-    Use generate_pdf when user says "PDF" or "report" without specifying format.
+    FORMAT RULES — follow strictly:
+    - User says "Excel", "spreadsheet", "xlsx", "sheet", "editable" → call generate_excel
+    - User says "PDF" → call generate_pdf
+    - Format is ambiguous (e.g. "generate report", "send me the data") → DO NOT guess.
+      Ask the user: "Would you like that as a PDF or an Excel spreadsheet?" first.
     Password protection is controlled by the admin panel — applied automatically if enabled.
 
     Args:
