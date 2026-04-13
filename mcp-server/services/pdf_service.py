@@ -5,6 +5,8 @@ Generates financial reports (financial, summary, invoice) from dummy data.
 
 import os
 import uuid
+import urllib.request
+import json
 from datetime import datetime
 
 from reportlab.lib import colors
@@ -17,12 +19,32 @@ from reportlab.platypus import (
 )
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 
+from reportlab.lib.pdfencrypt import StandardEncryption
+
 from dummy_data.financial import (
-    QUARTERLY_REVENUE, DEPARTMENTS, INVOICES, SUMMARY_STATS
+    QUARTERLY_REVENUE, DEPARTMENTS, INVOICES, SUMMARY_STATS, SUPPORT_TICKETS
 )
 
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "..", "outputs", "pdfs")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+_ADMIN_URL = os.getenv("ADMIN_PANEL_URL", "http://localhost:3000")
+
+
+def _get_pdf_password() -> str | None:
+    """Fetch PDF password setting from admin panel. Returns password string or None."""
+    try:
+        req = urllib.request.Request(
+            f"{_ADMIN_URL}/api/settings",
+            headers={"Accept": "application/json"},
+        )
+        with urllib.request.urlopen(req, timeout=3) as resp:
+            data = json.loads(resp.read())
+        if data.get("pdf_password_enabled") == "true" and data.get("pdf_password"):
+            return data["pdf_password"]
+    except Exception:
+        pass
+    return None
 
 # ── Brand colours ──────────────────────────────────────────────────────────────
 PRIMARY    = colors.HexColor("#1a1a2e")
@@ -212,15 +234,23 @@ def _table_style(header_bg=None) -> TableStyle:
 
 # ── Financial Report ───────────────────────────────────────────────────────────
 
-def generate_financial_report(title: str, period: str, department: str | None = None) -> str:
-    filename = f"financial_{uuid.uuid4().hex[:8]}.pdf"
-    filepath = os.path.join(OUTPUT_DIR, filename)
-
-    doc = SimpleDocTemplate(
-        filepath, pagesize=A4,
+def _make_doc(filepath: str, password: str | None = None):
+    encrypt = StandardEncryption(password, ownerPassword="", strength=128) if password else None
+    kwargs = dict(
+        pagesize=A4,
         leftMargin=2 * cm, rightMargin=2 * cm,
         topMargin=2.6 * cm, bottomMargin=2.6 * cm,
     )
+    if encrypt:
+        kwargs["encrypt"] = encrypt
+    return SimpleDocTemplate(filepath, **kwargs)
+
+
+def generate_financial_report(title: str, period: str, department: str | None = None, password: str | None = None) -> str:
+    filename = f"financial_{uuid.uuid4().hex[:8]}.pdf"
+    filepath = os.path.join(OUTPUT_DIR, filename)
+
+    doc = _make_doc(filepath, password)
     styles   = _build_styles()
     elements = []
 
@@ -300,15 +330,11 @@ def generate_financial_report(title: str, period: str, department: str | None = 
 
 # ── Summary Report ─────────────────────────────────────────────────────────────
 
-def generate_summary_report(title: str, period: str, **kwargs) -> str:
+def generate_summary_report(title: str, period: str, password: str | None = None, **kwargs) -> str:
     filename = f"summary_{uuid.uuid4().hex[:8]}.pdf"
     filepath = os.path.join(OUTPUT_DIR, filename)
 
-    doc = SimpleDocTemplate(
-        filepath, pagesize=A4,
-        leftMargin=2 * cm, rightMargin=2 * cm,
-        topMargin=2.6 * cm, bottomMargin=2.6 * cm,
-    )
+    doc = _make_doc(filepath, password)
     styles   = _build_styles()
     elements = []
 
@@ -357,15 +383,11 @@ def generate_summary_report(title: str, period: str, **kwargs) -> str:
 
 # ── Invoice Report ─────────────────────────────────────────────────────────────
 
-def generate_invoice_report(title: str, period: str, **kwargs) -> str:
+def generate_invoice_report(title: str, period: str, password: str | None = None, **kwargs) -> str:
     filename = f"invoice_{uuid.uuid4().hex[:8]}.pdf"
     filepath = os.path.join(OUTPUT_DIR, filename)
 
-    doc = SimpleDocTemplate(
-        filepath, pagesize=A4,
-        leftMargin=2 * cm, rightMargin=2 * cm,
-        topMargin=2.6 * cm, bottomMargin=2.6 * cm,
-    )
+    doc = _make_doc(filepath, password)
     styles   = _build_styles()
     elements = []
 
@@ -425,17 +447,124 @@ def generate_invoice_report(title: str, period: str, **kwargs) -> str:
     return filepath
 
 
+# ── Support Tickets Report ─────────────────────────────────────────────────────
+
+def generate_support_report(title: str, period: str, password: str | None = None, **kwargs) -> str:
+    filename = f"support_{uuid.uuid4().hex[:8]}.pdf"
+    filepath = os.path.join(OUTPUT_DIR, filename)
+
+    doc = _make_doc(filepath, password)
+    styles   = _build_styles()
+    elements = []
+    st       = SUPPORT_TICKETS
+
+    elements.append(_banner(
+        title or "Support Tickets Report",
+        f"Period: {period}  \u2022  {datetime.now().strftime('%B %d, %Y')}",
+        styles,
+    ))
+    elements.append(HRFlowable(width="100%", thickness=3, color=HIGHLIGHT, spaceAfter=14))
+
+    # KPI row
+    elements.append(_section_header("Overview", styles))
+    elements.append(Spacer(1, 8))
+    elements.append(_kpi_row([
+        ("TOTAL TICKETS",  str(st["stats"]["total"]),                  ACCENT),
+        ("OPEN",           str(st["stats"]["open"]),                   HIGHLIGHT),
+        ("IN PROGRESS",    str(st["stats"]["in_progress"]),            ACCENT),
+        ("RESOLVED",       str(st["stats"]["resolved"]),               GREEN),
+        ("AVG RESOLUTION", f"{st['stats']['avg_resolution_hours']}h",  ACCENT),
+    ], styles))
+    elements.append(Spacer(1, 6))
+    elements.append(_kpi_row([
+        ("CLOSED",         str(st["stats"]["closed"]),                 ACCENT),
+        ("SLA BREACH",     f"{st['stats']['sla_breach_rate']}%",       HIGHLIGHT),
+        ("CSAT SCORE",     f"{st['stats']['csat_score']} / 5.0",       GREEN),
+        ("PERIOD",         period,                                       PRIMARY),
+    ], styles))
+    elements.append(Spacer(1, 18))
+
+    # By Priority
+    elements.append(_section_header("Tickets by Priority", styles))
+    elements.append(Spacer(1, 8))
+    pri_rows = [["Priority", "Total", "Resolved", "Open", "Avg Resolution"]]
+    for r in st["by_priority"]:
+        pri_rows.append([
+            r["priority"],
+            str(r["count"]),
+            str(r["resolved"]),
+            str(r["count"] - r["resolved"]),
+            f"{r['avg_hours']}h",
+        ])
+    t_pri = Table(pri_rows, colWidths=[4 * cm, 3 * cm, 3 * cm, 3 * cm, 4 * cm])
+    t_pri.setStyle(_table_style(header_bg=ACCENT))
+    elements.append(t_pri)
+    elements.append(Spacer(1, 18))
+
+    # By Category
+    elements.append(_section_header("Tickets by Category", styles))
+    elements.append(Spacer(1, 8))
+    cat_rows = [["Category", "Total", "Resolved", "Open", "Resolution Rate"]]
+    for r in st["by_category"]:
+        rate = round(r["resolved"] / r["count"] * 100, 1) if r["count"] else 0
+        cat_rows.append([
+            r["category"],
+            str(r["count"]),
+            str(r["resolved"]),
+            str(r["count"] - r["resolved"]),
+            f"{rate}%",
+        ])
+    t_cat = Table(cat_rows, colWidths=[5 * cm, 3 * cm, 3 * cm, 3 * cm, 3 * cm])
+    t_cat.setStyle(_table_style(header_bg=ACCENT))
+    elements.append(t_cat)
+    elements.append(Spacer(1, 18))
+
+    # Recent tickets
+    elements.append(_section_header("Recent Tickets", styles))
+    elements.append(Spacer(1, 8))
+    rec_rows = [["Ticket ID", "Subject", "Priority", "Status", "Agent", "Hours"]]
+    status_colors = {
+        "Resolved":    colors.HexColor("#d4edda"),
+        "Closed":      colors.HexColor("#e2e3e5"),
+        "In Progress": colors.HexColor("#fff3cd"),
+        "Open":        colors.HexColor("#f8d7da"),
+    }
+    for r in st["recent"]:
+        rec_rows.append([
+            r["id"], r["subject"], r["priority"],
+            r["status"], r["agent"],
+            f"{r['hours']}h" if r["hours"] else "—",
+        ])
+    t_rec = Table(rec_rows, colWidths=[2.2 * cm, 6.2 * cm, 2.2 * cm, 2.5 * cm, 2.2 * cm, 1.7 * cm])
+    base_ts = _table_style()
+    for i, r in enumerate(st["recent"], start=1):
+        bg = status_colors.get(r["status"])
+        if bg:
+            base_ts.add("BACKGROUND", (3, i), (3, i), bg)
+    t_rec.setStyle(base_ts)
+    elements.append(t_rec)
+
+    doc.build(elements, onFirstPage=_header_footer, onLaterPages=_header_footer)
+    return filepath
+
+
 # ── Dispatcher ─────────────────────────────────────────────────────────────────
 
 REPORT_GENERATORS = {
-    "financial": generate_financial_report,
-    "summary":   generate_summary_report,
-    "invoice":   generate_invoice_report,
+    "financial":      generate_financial_report,
+    "summary":        generate_summary_report,
+    "invoice":        generate_invoice_report,
+    "support":        generate_support_report,
+    "support_tickets": generate_support_report,
 }
 
 
 def generate_pdf(report_type: str, title: str, params: dict) -> str:
     period     = params.get("period", "Q1 2025")
     department = params.get("department")
-    generator  = REPORT_GENERATORS.get(report_type, generate_financial_report)
-    return generator(title=title, period=period, department=department)
+    # Always use the admin panel setting — overrides anything the LLM passes
+    password   = _get_pdf_password()
+    generator  = REPORT_GENERATORS.get(report_type)
+    if generator is None:
+        return f"ERROR: Unknown report_type '{report_type}'. Supported: {', '.join(REPORT_GENERATORS)}"
+    return generator(title=title, period=period, department=department, password=password)

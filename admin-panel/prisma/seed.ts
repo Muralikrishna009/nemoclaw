@@ -79,6 +79,18 @@ async function main() {
     },
   });
 
+  // Default settings
+  await prisma.setting.upsert({
+    where: { key: "pdf_password_enabled" },
+    update: {},
+    create: { key: "pdf_password_enabled", value: "false" },
+  });
+  await prisma.setting.upsert({
+    where: { key: "pdf_password" },
+    update: {},
+    create: { key: "pdf_password", value: "" },
+  });
+
   console.log("✓ Seed complete");
 }
 

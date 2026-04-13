@@ -38,6 +38,16 @@ function PermissionsIcon() {
   );
 }
 
+function SettingsIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+      strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="8" cy="8" r="2.5" />
+      <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.1 3.1l1.4 1.4M11.5 11.5l1.4 1.4M3.1 12.9l1.4-1.4M11.5 4.5l1.4-1.4" />
+    </svg>
+  );
+}
+
 function SignOutIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor"
@@ -54,6 +64,7 @@ const nav = [
   { href: "/dashboard",   label: "Dashboard",   Icon: DashboardIcon },
   { href: "/users",       label: "Users",       Icon: UsersIcon },
   { href: "/permissions", label: "Permissions", Icon: PermissionsIcon },
+  { href: "/settings",    label: "Settings",    Icon: SettingsIcon },
 ];
 
 // ── Component ─────────────────────────────────────────────────────────────────

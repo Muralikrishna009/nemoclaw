@@ -32,12 +32,25 @@ def generate_pdf(
     department: str = "",
 ) -> dict:
     """
-    Generate a PDF financial report.
+    Generate a PDF report. Choose report_type based on what the user asks for:
+
+    - "financial"  → revenue, expenses, profit by month + department budgets
+                     Use when: user asks for financial report, revenue report, P&L, profit report
+    - "summary"    → executive summary with all-quarter KPIs
+                     Use when: user asks for summary, executive summary, overview, quarterly summary
+    - "invoice"    → invoice ledger with Paid/Pending/Overdue status
+                     Use when: user asks for invoices, billing, invoice list, payment status
+    - "support"    → support ticket stats by priority and category + recent ticket list
+                     Use when: user asks for support tickets, ticket report, helpdesk report,
+                     customer support, number of tickets, ticket summary
+
+    DO NOT use "financial" for support ticket requests. Pick the matching type above.
+    Password protection is controlled by the admin panel — no password param needed here.
 
     Args:
-        report_type: "financial", "summary", or "invoice"
-        period: e.g. "Q1 2025", "Q2 2025", "Q3 2025", "Q4 2025"
-        department: Sales | Engineering | Marketing | Operations | HR (optional)
+        report_type: "financial" | "summary" | "invoice" | "support"
+        period: "Q1 2025" | "Q2 2025" | "Q3 2025" | "Q4 2025"
+        department: Sales | Engineering | Marketing | Operations | HR (optional, for financial only)
 
     Returns:
         file_path of the generated PDF. Output MEDIA:<file_path> to send it to the user.
@@ -48,7 +61,7 @@ def generate_pdf(
 
     filepath = _gen_pdf(
         report_type=report_type,
-        title=f"{report_type.title()} Report",
+        title=f"{report_type.replace('_', ' ').title()} Report",
         params=params,
     )
 

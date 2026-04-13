@@ -53,6 +53,42 @@ SUMMARY_STATS = {
     "new_clients": 12,
 }
 
+SUPPORT_TICKETS = {
+    "stats": {
+        "total": 348,
+        "open": 42,
+        "in_progress": 31,
+        "resolved": 251,
+        "closed": 24,
+        "avg_resolution_hours": 6.4,
+        "sla_breach_rate": 4.2,
+        "csat_score": 4.3,
+    },
+    "by_priority": [
+        {"priority": "Critical", "count": 18,  "resolved": 15, "avg_hours": 2.1},
+        {"priority": "High",     "count": 67,  "resolved": 58, "avg_hours": 4.8},
+        {"priority": "Medium",   "count": 153, "resolved": 112, "avg_hours": 7.2},
+        {"priority": "Low",      "count": 110, "resolved": 66, "avg_hours": 11.5},
+    ],
+    "by_category": [
+        {"category": "Billing",          "count": 82,  "resolved": 76},
+        {"category": "Technical Issue",  "count": 115, "resolved": 89},
+        {"category": "Account Access",   "count": 63,  "resolved": 55},
+        {"category": "Feature Request",  "count": 48,  "resolved": 12},
+        {"category": "General Inquiry",  "count": 40,  "resolved": 19},
+    ],
+    "recent": [
+        {"id": "TKT-1041", "subject": "Login failure after password reset",    "priority": "High",     "status": "Resolved", "agent": "Alice M.", "hours": 3.2},
+        {"id": "TKT-1040", "subject": "Invoice amount mismatch",               "priority": "Critical", "status": "Resolved", "agent": "Bob K.",   "hours": 1.8},
+        {"id": "TKT-1039", "subject": "API rate limit exceeded",               "priority": "High",     "status": "In Progress", "agent": "Carol T.", "hours": 5.1},
+        {"id": "TKT-1038", "subject": "Dashboard not loading on Safari",       "priority": "Medium",   "status": "Open",     "agent": "—",        "hours": 0},
+        {"id": "TKT-1037", "subject": "Request for bulk export feature",       "priority": "Low",      "status": "Open",     "agent": "—",        "hours": 0},
+        {"id": "TKT-1036", "subject": "Wrong tax applied on renewal",          "priority": "High",     "status": "Resolved", "agent": "Alice M.", "hours": 4.5},
+        {"id": "TKT-1035", "subject": "2FA setup not working on mobile",       "priority": "Medium",   "status": "Resolved", "agent": "Bob K.",   "hours": 6.0},
+        {"id": "TKT-1034", "subject": "Data export CSV encoding issue",        "priority": "Medium",   "status": "Closed",   "agent": "Carol T.", "hours": 8.3},
+    ],
+}
+
 # Flowchart node/edge definitions for diagrams
 PROCESS_FLOWS = {
     "order_processing": {
