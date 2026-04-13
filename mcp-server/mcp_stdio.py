@@ -14,6 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from mcp.server.fastmcp import FastMCP
 from services.pdf_service import generate_pdf as _gen_pdf
 from services.image_service import generate_image as _gen_img
+from services.excel_service import generate_excel as _gen_excel
 
 mcp = FastMCP(
     name="NemoClaw Tools",
@@ -109,6 +110,56 @@ def generate_image(
         "success": True,
         "file_path": tmp_path,
         "message": f"{diagram_type.replace('_', ' ').title()} is ready.",
+    }
+
+
+@mcp.tool()
+def generate_excel(
+    report_type: str = "financial",
+    period: str = "Q1 2025",
+    department: str = "",
+) -> dict:
+    """
+    Generate an Excel (.xlsx) workbook. Choose report_type based on what the user asks for:
+
+    - "financial" → multi-sheet: Overview KPIs + revenue breakdown + department budgets
+                    Use when: user asks for financial Excel, revenue spreadsheet, P&L spreadsheet
+    - "summary"   → executive KPI summary + all-quarters performance table
+                    Use when: user asks for summary Excel, overview spreadsheet
+    - "invoice"   → invoice ledger with Paid/Pending/Overdue status color coding
+                    Use when: user asks for invoice Excel, billing spreadsheet
+    - "support"   → 4 sheets: Overview stats, By Priority, By Category, Recent Tickets
+                    Use when: user asks for support ticket Excel, helpdesk spreadsheet
+
+    Use generate_excel when user says "Excel", "spreadsheet", "xlsx", or "sheet".
+    Use generate_pdf when user says "PDF" or "report" without specifying format.
+    Password protection is controlled by the admin panel — applied automatically if enabled.
+
+    Args:
+        report_type: "financial" | "summary" | "invoice" | "support"
+        period: "Q1 2025" | "Q2 2025" | "Q3 2025" | "Q4 2025"
+        department: Sales | Engineering | Marketing | Operations | HR (optional, financial only)
+
+    Returns:
+        file_path of the generated .xlsx file. Output MEDIA:<file_path> to send it to the user.
+    """
+    params = {"period": period}
+    if department:
+        params["department"] = department
+
+    filepath = _gen_excel(
+        report_type=report_type,
+        title=f"{report_type.replace('_', ' ').title()} Report",
+        params=params,
+    )
+
+    tmp_path = os.path.join("/tmp", os.path.basename(filepath))
+    shutil.copy2(filepath, tmp_path)
+
+    return {
+        "success": True,
+        "file_path": tmp_path,
+        "message": f"{report_type.replace('_', ' ').title()} Excel for {period} is ready.",
     }
 
 

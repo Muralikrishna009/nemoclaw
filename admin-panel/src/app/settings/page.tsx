@@ -98,7 +98,7 @@ export default function SettingsPage() {
               borderRadius: 2, flexShrink: 0,
             }} />
             <h2 style={{ fontSize: 15, fontWeight: 700, color: "var(--primary)" }}>
-              PDF Password Protection
+              Generated Files Password Protection
             </h2>
           </div>
 
@@ -114,12 +114,12 @@ export default function SettingsPage() {
           }}>
             <div>
               <div style={{ fontWeight: 600, fontSize: 14, color: "var(--primary)" }}>
-                Enable password on all generated PDFs
+                Enable password on all generated PDFs and Excel files
               </div>
               <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>
                 {enabled
-                  ? "All PDFs will require the password below to open."
-                  : "PDFs are generated without a password."}
+                  ? "All PDFs and Excel files will require the password below to open."
+                  : "Files are generated without a password."}
               </div>
             </div>
             {/* Toggle switch */}
@@ -182,7 +182,7 @@ export default function SettingsPage() {
               </button>
             </div>
             <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 6 }}>
-              Users must enter this password to open any generated PDF.
+              Users must enter this password to open any generated PDF or Excel file.
             </p>
           </div>
 

@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "WebSearch",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(du -sh /c/Users/murali.gedela/Projects/nemo2/*)"
     ]
   }
 }
